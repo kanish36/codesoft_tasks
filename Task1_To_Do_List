@@ -1,0 +1,155 @@
+"""
+CodSoft Python Programming Internship
+Task 1: To-Do List Application
+
+A command-line To-Do List app that lets users create, view, update,
+mark complete, and delete tasks. Tasks persist between sessions using
+a local JSON file (todo_data.json).
+"""
+
+import json
+import os
+from datetime import datetime
+
+DATA_FILE = "todo_data.json"
+
+
+def load_tasks():
+    """Load tasks from the JSON file, or return an empty list if none exist."""
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return []
+    return []
+
+
+def save_tasks(tasks):
+    """Save the current list of tasks to the JSON file."""
+    with open(DATA_FILE, "w") as f:
+        json.dump(tasks, f, indent=4)
+
+
+def display_menu():
+    print("\n" + "=" * 40)
+    print("           TO-DO LIST MANAGER")
+    print("=" * 40)
+    print("1. View Tasks")
+    print("2. Add Task")
+    print("3. Update Task")
+    print("4. Mark Task as Complete")
+    print("5. Delete Task")
+    print("6. Exit")
+    print("=" * 40)
+
+
+def view_tasks(tasks):
+    if not tasks:
+        print("\nYour to-do list is empty!")
+        return
+    print("\nYour Tasks:")
+    print("-" * 60)
+    for i, task in enumerate(tasks, start=1):
+        status = "✔ Done" if task["completed"] else "✘ Pending"
+        print(f"{i}. [{status}] {task['title']}")
+        if task.get("description"):
+            print(f"     Description: {task['description']}")
+        print(f"     Added on: {task['created']}")
+        print("-" * 60)
+
+
+def add_task(tasks):
+    title = input("Enter task title: ").strip()
+    if not title:
+        print("Task title cannot be empty.")
+        return
+    description = input("Enter task description (optional): ").strip()
+    task = {
+        "title": title,
+        "description": description,
+        "completed": False,
+        "created": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    tasks.append(task)
+    save_tasks(tasks)
+    print(f"Task '{title}' added successfully!")
+
+
+def update_task(tasks):
+    view_tasks(tasks)
+    if not tasks:
+        return
+    try:
+        index = int(input("Enter the task number to update: ")) - 1
+        if 0 <= index < len(tasks):
+            new_title = input(f"Enter new title (leave blank to keep '{tasks[index]['title']}'): ").strip()
+            new_desc = input("Enter new description (leave blank to keep current): ").strip()
+            if new_title:
+                tasks[index]["title"] = new_title
+            if new_desc:
+                tasks[index]["description"] = new_desc
+            save_tasks(tasks)
+            print("Task updated successfully!")
+        else:
+            print("Invalid task number.")
+    except ValueError:
+        print("Please enter a valid number.")
+
+
+def complete_task(tasks):
+    view_tasks(tasks)
+    if not tasks:
+        return
+    try:
+        index = int(input("Enter the task number to mark complete: ")) - 1
+        if 0 <= index < len(tasks):
+            tasks[index]["completed"] = True
+            save_tasks(tasks)
+            print("Task marked as complete!")
+        else:
+            print("Invalid task number.")
+    except ValueError:
+        print("Please enter a valid number.")
+
+
+def delete_task(tasks):
+    view_tasks(tasks)
+    if not tasks:
+        return
+    try:
+        index = int(input("Enter the task number to delete: ")) - 1
+        if 0 <= index < len(tasks):
+            removed = tasks.pop(index)
+            save_tasks(tasks)
+            print(f"Task '{removed['title']}' deleted successfully!")
+        else:
+            print("Invalid task number.")
+    except ValueError:
+        print("Please enter a valid number.")
+
+
+def main():
+    tasks = load_tasks()
+    while True:
+        display_menu()
+        choice = input("Choose an option (1-6): ").strip()
+        if choice == "1":
+            view_tasks(tasks)
+        elif choice == "2":
+            add_task(tasks)
+        elif choice == "3":
+            update_task(tasks)
+        elif choice == "4":
+            complete_task(tasks)
+        elif choice == "5":
+            delete_task(tasks)
+        elif choice == "6":
+            print("Goodbye! Your tasks have been saved.")
+            break
+        else:
+            print("Invalid choice. Please select 1-6.")
+
+
+if __name__ == "__main__":
+    main()
